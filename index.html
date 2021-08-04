@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ethereum (ETH) Blockchain Explorer</title>
+    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./assets/favicon.ico" type="image/x-icon">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script type="text/javascript" src="./assets/lib/bignumber.min.js"></script>
+
+    <!-- <script type="text/javascript" src="./assets/lib/web3.js"></script> -->
+    <script type="text/javascript" src="./node_modules/web3/dist/web3.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./assets/style.css">
+    </link>
+</head>
+
+<body>
+    <header id="navbar">
+        <div style="float:left">
+            <img src="./assets/logo.png" width="200px" height="60px" class="logo"></img>
+
+        </div>
+        <div class="pt-2" style="float:right">
+            <button type="button" class="btn btn-light">
+                <span class="fc-1">Home</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">Blockchain</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">Tokens</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">Resources</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">More</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">Sign in</span>
+            </button>
+            <button type="button" class="btn btn-light text-light">
+                <span class="fc-1">eth</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="bg-1 row">
+        <div class="search col-7 pb-5 my-5">
+            <h3 class="title-1">The Ethereum Blockchain Explorer</h3>
+
+            <div class="input-group mb-3 ">
+                <button class="btn btn-light dropdown-toggle border border-secondary" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">All Filters</button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Action</a></li>
+                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="#">Separated link</a></li>
+                </ul>
+                <input type="text" id="search" class="form-control"
+                    placeholder="Search by Address / Txn Hash / Block / Token / Ens">
+
+                <button class="btn bg-2" type="button" onClick="search()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <p class="text-white-50">
+                <b class="text-light mb-0">Sponsored:</b> Looking for Asian Small-clawed Otter? Check out
+                <a href="http://mightyotter.tistory.com" class="text-decoration-none">mightyotter.tistory.com!</a>
+                🚜🌾
+            </p>
+        </div>
+        <div class="col-3 pb-5 my-5">
+            <img src="./assets/advertisement.png" width="256px" height="144px" style="border-radius: 20px; " />
+            <p class="rounded-pill bg-white" style="float:left;">test</p>
+
+        </div>
+    </div>
+    <div class="bg-transparent">
+        <div class="rounded rounded-3 container">
+            <div style="float:left">
+                <table id="accountList">
+                </table>
+                <button onClick="getAccounts()"> 계정 정보 불러오기 </button>
+            </div>
+            <div style="float:right">
+                <div>
+                    최근 생성 블록
+                </div>
+                <div>
+                    최근 생성 트랜젝션
+                </div>
+            </div>
+            <div>
+                <input type="text" id="toAddress" placeholder="To Address" />
+                <input type="text" id="fromAddress" placeholder="From Address" />
+                <input type="text" id="amount" placeholder="Send Ether Amount" />
+                <button onClick="sendEther()">Send</button>
+                <div>
+                    <input type="text" id="txSearch" placeholder="Tx Address" />
+                    <button onClick="getTransaction()">Search Tx</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="transaction">
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        document.getElementById("fromAddress").value = "0x9178f78D4303fAF47abF84c68b8350700aA5E9E1";
+        document.getElementById("toAddress").value = "0xA3AB18e9811499eeE00396aD834838932F969bF0";
+        document.getElementById("amount").value = 0.01;
+        document.getElementById("txSearch").value =
+            "0x397f64d3f81c17224cd0dbe99a2e06b790efc3ac3a4ce233316ac1f53b211062";
+    </script>
+
+    <script type="text/javascript">
+        let web3;
+        let accounts = [];
+
+        init();
+
+        function init() {
+            web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
+
+            console.log(web3.version !== "" ? `web3 ${web3.version} connected` : "not connected");
+        }
+
+
+        function setAddressToTextBox() {
+            // 일단 패스
+        }
+
+        function renderAccount() {
+            let list = ""
+
+            console.log("acc", accounts);
+
+            for (var account of accounts) {
+                console.log("#", account)
+                //let balance = web3.eth.getBalance(account) / 1000000000000000000;
+                list += `<tr><td>${account}</td></tr>`; //  <td>${balance} ETH</td>
+            }
+
+            document.getElementById("accountList").innerHTML = list;
+        }
+
+        async function getAccounts() {
+            accounts = await web3.eth.getAccounts().then()
+            renderAccount();
+        }
+
+        // 트랜잭션 발생 요인 3가지 (이더 전송, 컨트랙트 배포, 컨트랙트 실행)
+        async function sendEther() {
+            let amount = document.getElementById("amount").value;
+
+            if (amount == null) {
+                console.log("ether amount not typed");
+                return -1;
+            } else {
+                let fromAddr = document.getElementById("fromAddress").value;
+                let toAddr = document.getElementById("toAddress").value;
+                let amount = document.getElementById("amount").value;
+
+                let txHash = await web3.eth.sendTransaction({
+                    from: fromAddr,
+                    to: toAddr,
+                    value: web3.utils.toWei(amount, "ether"),
+                });
+
+                console.log(txHash.transactionHash);
+                document.getElementById("txSearch").value = txHash.transactionHash;
+
+                renderAccount();
+            }
+        }
+
+        function sendTransaction() {
+
+        }
+
+        async function getTransaction() {
+
+            document.getElementById("transaction").innerHTML =
+                '<table id="txInfo" class="table table-striped table-hover"></table>'
+
+            let element = document.getElementById("txInfo");
+            let txHash = document.getElementById("txSearch").value;
+            let result = await web3.eth.getTransaction(txHash);
+            let list = ""
+
+            for (var key of Object.keys(result)) {
+                list +=
+                    `<tr><td>${key}</td> <td style="text-align: left";>${result[key]}</td></tr>`;
+                console.log(key, result[key]);
+            }
+
+            element.innerHTML = list;
+            element.insertAdjacentHTML('beforebegin', "<h3> Transaction Info </h3>")
+        }
+
+        async function getBlock(param) {
+            let element = document.getElementById("txInfo");
+
+            await web3.eth.getBlock()
+        }
+
+
+        function search() {
+            let query = document.getElementById("search").value;
+            console.log(query)
+            if (web3.utils.isHex(query)) {
+                let value = web3.utils.isHexStrict(query) ? web3.utils.hexToNumber(query) : parseInt(query);
+                console.log("넘릭", value, typeof value)
+            } else if (web3.utils.isAddress(query)) {
+                console.log("통과")
+            } else if (true) {
+                console.log("불통")
+            } else {
+                console.log("불통")
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+#navbar {
+    height: 70px;
+
+    padding-top: 7px;
+    padding-left: 70px;
+    padding-right: 70px;
+}
+
+.logo {
+
+    object-fit: cover;
+}
+
+.title-1 {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 21px;
+    font-weight: 400;
+
+    color: white;
+
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.fc-1 {
+    color: RGB(107, 72, 71);
+}
+
+.fc-2 {
+    color: RGB(191, 172, 158);
+    font-weight: bolder;
+}
+
+.bg-1 {
+    background-color: rgb(107, 72, 71);
+}
+
+.bg-2 {
+    background-color: rgb(190, 171, 157)
+}
+
+.ad {}
+
+.search {
+    margin-left: 5%;
+}
+
+.contents {
+    /* background-color: RGB(255, 255, 255); */
+}
+
+.container {
+    z-index: auto;
+    border: 1px solid rgb(200, 200, 200);
+    margin-top: -3rem;
+    margin-left: 5%;
+    margin-bottom: 4rem;
+    background-color: white;
+    height: 500px;
+    padding: 20px 20px 20px 20px;
+    text-align: center;
+}
+
+.list {}
+
+.accounts {}
+
+.tx {}
