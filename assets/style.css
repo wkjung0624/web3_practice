@@ -7,7 +7,6 @@
 }
 
 .logo {
-
     object-fit: cover;
 }
 
@@ -39,30 +38,34 @@
     background-color: rgb(190, 171, 157)
 }
 
-.ad {}
+.ad {
+    position: relative;
+    right: -1.0rem;
+    top: 0.7rem;
+    font-size: .76563rem;
+    padding: 0.005rem 0.3rem 0.01rem 0.3rem;
+}
 
 .search {
     margin-left: 5%;
-}
-
-.contents {
-    /* background-color: RGB(255, 255, 255); */
+    margin-right: 5%;
 }
 
 .container {
-    z-index: auto;
+
     border: 1px solid rgb(200, 200, 200);
     margin-top: -3rem;
     margin-left: 5%;
     margin-bottom: 4rem;
     background-color: white;
-    height: 500px;
+    min-height: 200px;
+    height: 100%;
     padding: 20px 20px 20px 20px;
     text-align: center;
+    display: inline-block
 }
 
-.list {}
-
-.accounts {}
-
-.tx {}
+.tb-bd-x {
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+}
