@@ -43,6 +43,8 @@
     right: -1.0rem;
     top: 0.7rem;
     font-size: .76563rem;
+    font-weight: bold;
+    color: rgb(107, 72, 71);
     padding: 0.005rem 0.3rem 0.01rem 0.3rem;
 }
 
@@ -51,18 +53,20 @@
     margin-right: 5%;
 }
 
-.container {
-
+.contents {
+    width: 90%;
     border: 1px solid rgb(200, 200, 200);
     margin-top: -3rem;
     margin-left: 5%;
     margin-bottom: 4rem;
     background-color: white;
-    min-height: 200px;
+
+    min-height: 520px;
     height: 100%;
+
     padding: 20px 20px 20px 20px;
     text-align: center;
-    display: inline-block
+    display: inline-block;
 }
 
 .tb-bd-x {
