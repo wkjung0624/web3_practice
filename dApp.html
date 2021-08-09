@@ -1,0 +1,141 @@
+<!Doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.2.3/milligram.min.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- <link rel="stylesheet" type="text/css" href="./assets/style.css"> -->
+    <!-- <script type="text/javascript" data-main="scripts/main" src="https://cdn.jsdelivr.net/npm/solc@0.8.6/index.min.js">
+    </script>
+    <script type="text/javascript" src="https://solc-bin.ethereum.org/bin/soljson-latest.js"></script> -->
+
+    <!-- <script type="text/javascript" data-main="scripts/main"
+        src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/bin/r.min.js"></script> -->
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@1.4.0/dist/web3.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bignumber.js@9.0.1/bignumber.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@1.4.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+
+<body>
+    <div>
+        <h3>Otter's Contract Maker</h3>
+        <input type="text" id="contractName" placeholder="Contract Name"></input>
+        <input type="text" id="contractAddr" placeholder="Contract Address"></input>
+        <textarea id="code" placeholder="Contract Code Here..." class="overflow-auto"
+            style="min-height: 400px;"></textarea>
+        <br>
+        <h5>My Account Address</h5>
+        <input type="text" placeholder="Ethereum Acccount Address" id="account"></input>
+        <button onClick="compile()">Compile</button>
+        <button onClick="getContract()">Contract</button>
+    </div>
+</body>
+
+<script>
+    document.getElementById("contractName").value = 'test.sol'
+    document.getElementById("code").value =
+        `pragma solidity ^0.8.4;
+
+contract Hello{
+    function getBlockNumber() public view returns(uint){
+        return block.number;
+    }
+    function getHash() public view returns(bytes32){
+        return keccak256(abi.encodePacked(block.timestamp));
+    }
+}`
+</script>
+
+<script type="text/javascript">
+    let web3;
+
+    let provider;
+    let account;
+    let contracts = [];
+
+    init();
+
+    async function init() {
+        // metamask 가 ethereum 객체를 injection 함
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            try {
+                // Request account access if needed
+                console.log(await ethereum.request({
+                    method: 'eth_requestAccounts'
+                }))
+                // Acccounts now exposed
+                web3.eth.getAccounts().then(function (account) {
+                    document.getElementById("account").value = account
+                })
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        // Legacy dapp browsers...
+        else if (window.web3) {
+            // Use Mist/MetaMask's provider.
+            web3 = window.web3;
+            console.log("Injected web3 detected.");
+        }
+    }
+
+    async function compile() {
+        const contractName = document.getElementById("contractName").value;
+
+        let article = {
+            language: 'Solidity',
+            sources: {
+                [contractName]: {
+                    content: document.getElementById("code").value
+                }
+            },
+            settings: {
+                outputSelection: {
+                    '*': {
+                        '*': ['*']
+                    }
+                }
+            }
+        }
+        axios.post('http://localhost:3000/compile', article).then((res) => {
+            console.log("res : ", res)
+            contracts.push({
+                abi: res.data.abi,
+                bytecode: res.data.bytecode
+            });
+        });
+    }
+
+    async function getContract() {
+        console.log(contracts)
+        for (var _contract of contracts) {
+            var Contract = new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
+            document.getElementById("contractAddr").value = _contract._address
+            console.log(Contract._address)
+        }
+
+        // listen event
+        // Contract.events.SetName({}, function (error, event) {
+        //     console.log(event)
+        //     document.getElementById("eventResult").innerText = event.returnValues.name + ", " + event
+        //         .returnValues.sender
+        // })
+        // document.getElementById("eventResult").innerText = "Listening..."
+    }
+</script>
+
+</html>
