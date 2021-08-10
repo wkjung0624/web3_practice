@@ -26,12 +26,13 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bignumber.js@9.0.1/bignumber.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@1.4.0/dist/web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/csv@5.5.0/lib"></script>
 
 
 
 <body>
     <div>
-        <h3>Otter's Contract Maker</h3>
+        <h3>MightyOtter's Contract Maker</h3>
         <input type="text" id="contractName" placeholder="Contract Name"></input>
         <input type="text" id="contractAddr" placeholder="Contract Address"></input>
         <textarea id="code" placeholder="Contract Code Here..." class="overflow-auto"
@@ -40,8 +41,11 @@
         <h5>My Account Address</h5>
         <input type="text" placeholder="Ethereum Acccount Address" id="account"></input>
         <button onClick="compile()">Compile</button>
-        <button onClick="getContract()">Contract</button>
+        <button onClick="deploy()">deploy</button>
+        <button onClick="getContract()">Get Contract</button>
     </div>
+    <div id="result" style="margin-top:2rem;"></div>
+
 </body>
 
 <script>
@@ -50,8 +54,16 @@
         `pragma solidity ^0.8.4;
 
 contract Hello{
+    uint asd;
+    function setNumber(uint a, uint b) public returns(uint){
+        asd = a + b;
+        return asd;
+    }
     function getBlockNumber() public view returns(uint){
         return block.number;
+    }
+    function getBlockNumber2(uint a, uint b) public pure returns(uint){
+        return a + b;
     }
     function getHash() public view returns(bytes32){
         return keccak256(abi.encodePacked(block.timestamp));
@@ -63,8 +75,10 @@ contract Hello{
     let web3;
 
     let provider;
-    let account;
-    let contracts = [];
+    let accounts = [];
+    let contracts = []; // [{abi:(abistruct), bytecode:(btcode)}]
+
+    let blocks = [];
 
     init();
 
@@ -74,13 +88,10 @@ contract Hello{
             web3 = new Web3(window.ethereum);
             try {
                 // Request account access if needed
-                console.log(await ethereum.request({
+                accounts = await ethereum.request({
                     method: 'eth_requestAccounts'
-                }))
-                // Acccounts now exposed
-                web3.eth.getAccounts().then(function (account) {
-                    document.getElementById("account").value = account
                 })
+                document.getElementById("account").value = accounts[0];
             } catch (error) {
                 console.log(error);
             }
@@ -94,8 +105,10 @@ contract Hello{
     }
 
     async function compile() {
+        contracts = [];
         const contractName = document.getElementById("contractName").value;
 
+        // 현재 컨트랙트 1개까지만 가능함
         let article = {
             language: 'Solidity',
             sources: {
@@ -112,18 +125,77 @@ contract Hello{
             }
         }
         axios.post('http://localhost:3000/compile', article).then((res) => {
-            console.log("res : ", res)
-            contracts.push({
+            var contractItem = {
                 abi: res.data.abi,
                 bytecode: res.data.bytecode
-            });
+            }
+            contracts.push(contractItem);
+            console.log("res : ", res)
         });
     }
 
+
+    async function deploy() {
+        var block;
+        for (var contractItem of contracts) {
+            block = await web3.eth.sendTransaction({
+                from: accounts[0],
+                data: contractItem.bytecode
+            });
+
+            blocks.push(block);
+        }
+        console.log("##", blocks);
+        document.getElementById("contractAddr").value = block.contractAddress
+        alert("!!! Contract Deployed !!!")
+        //getContract();
+    }
+
+    async function sendContractFunction(funcName) {
+        console.log("send")
+        var params =
+            document.getElementById(`input_${funcName}`).value.split(",");
+
+        var temp = new web3.eth.Contract(contracts[0].abi[0], document.getElementById("contractAddr").value);
+
+        // temp.methods[funcName].send({
+        //     from: accounts[0],
+        // });
+    }
+    async function callContractFunction(funcName) {
+        console.log("call", funcName)
+        var temp = new web3.eth.Contract(contracts[0].abi[0], document.getElementById("contractAddr").value);
+        temp.methods[funcName].call()
+    }
+
     async function getContract() {
-        console.log(contracts)
+        var ele = document.getElementById('result');
+        var scripts = '';
+        var funcSwitch = '';
+
+        for (var contract of contracts) {
+            for (var abis of contract.abi) {
+                for (var abi of abis) {
+                    funcSelector = (abi.stateMutability != "view" && abi.stateMutability != "pure") ?
+                        "sendContractFunction" : "callContractFunction"
+
+                    scripts +=
+                        '<div style="float:left">' +
+                        `<button onclick='${funcSelector}("${abi.name}")'} style="margin-top:1rem; width:150px">${abi.name}</button>` +
+                        (abi.inputs.length != 0 ?
+                            `<br><input type="text" id="input_${abi.name}" style="width:150px";/>` :
+                            "") +
+                        "<br></div>"
+                }
+            }
+        }
+        ele.innerHTML = "";
+        ele.insertAdjacentHTML('beforeend', scripts);
+
+
+        console.log("#", contracts)
         for (var _contract of contracts) {
-            var Contract = new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
+            var Contract = await new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
             document.getElementById("contractAddr").value = _contract._address
             console.log(Contract._address)
         }

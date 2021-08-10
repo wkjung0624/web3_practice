@@ -42,7 +42,6 @@ app.post('/compile', function (req, res) {
     // }
 
     // res.send(output);
-    console.log("test2");
     try {
         var output = JSON.parse(solc.compile(JSON.stringify(req.body)));
         console.log(output);
@@ -56,10 +55,6 @@ app.post('/compile', function (req, res) {
 
             var abi = output.contracts['test.sol'][contractName].abi
             abis.push(abi);
-
-            console.log(
-                `${contractName} : ${abi} ${btcode}`
-            );
         }
 
         res.send({
