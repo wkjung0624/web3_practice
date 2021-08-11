@@ -153,6 +153,7 @@ contract Hello{
 
     async function sendContractFunction(funcName) {
         console.log("send")
+        document.getElementById("contractAddr").value
         var params =
             document.getElementById(`input_${funcName}`).value.split(",");
 
@@ -164,8 +165,16 @@ contract Hello{
     }
     async function callContractFunction(funcName) {
         console.log("call", funcName)
+        
+        var params = document.getElementById(`input_${funcName}`).value
+        
+        params = (params != null ? params.split(",") : []);
+        console.log(params)
+
         var temp = new web3.eth.Contract(contracts[0].abi[0], document.getElementById("contractAddr").value);
-        temp.methods[funcName].call()
+        temp.methods[funcName].call(params).then((res)=>{
+            document.getElementById(`result_${funcName}`).value = res
+        });
     }
 
     async function getContract() {
@@ -183,9 +192,9 @@ contract Hello{
                         '<div style="float:left">' +
                         `<button onclick='${funcSelector}("${abi.name}")'} style="margin-top:1rem; width:150px">${abi.name}</button>` +
                         (abi.inputs.length != 0 ?
-                            `<br><input type="text" id="input_${abi.name}" style="width:150px";/>` :
+                            `<br><input type="text" id="input_${abi.name}" style="width:150px"/>` :
                             "") +
-                        "<br></div>"
+                        `<br><input type="text" id="result_${abi.name}" style="width:150px" readonly/></div>`
                 }
             }
         }
