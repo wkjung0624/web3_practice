@@ -49,6 +49,7 @@
 </body>
 
 <script>
+    document.getElementById("contractAddr").value = '0x9759df733e1b503368abcaae437e1280f10f16f7';
     document.getElementById("contractName").value = 'test.sol'
     document.getElementById("code").value =
         `pragma solidity ^0.8.4;
@@ -92,6 +93,7 @@ contract Hello{
                     method: 'eth_requestAccounts'
                 })
                 document.getElementById("account").value = accounts[0];
+                web3.eth.Contract.defaultAccount = accounts[0];
             } catch (error) {
                 console.log(error);
             }
@@ -164,17 +166,36 @@ contract Hello{
         // });
     }
     async function callContractFunction(funcName) {
-        console.log("call", funcName)
-        
-        var params = document.getElementById(`input_${funcName}`).value
-        
-        params = (params != null ? params.split(",") : []);
-        console.log(params)
+        console.log("call", funcName, web3.eth.Contract.defaultAccount)
 
-        var temp = new web3.eth.Contract(contracts[0].abi[0], document.getElementById("contractAddr").value);
-        temp.methods[funcName].call(params).then((res)=>{
-            document.getElementById(`result_${funcName}`).value = res
-        });
+        let params;
+
+        try {
+            params = document.getElementById(`input_${funcName}`).value.split(",");
+        } catch (err) {
+            params = 0x00;
+        }
+
+        var _abi = (() => {
+            for (var item of contracts[0].abi[0]) {
+                if (item.name == funcName) {
+                    return item;
+                }
+            }
+        })()
+
+        console.log("params:", params)
+        console.log("abi:", _abi);
+
+        web3.eth.abi.encodeFunctionCall(_abi, params);
+
+        var res = await web3.eth.call({
+            to: document.getElementById("contractAddr").value,
+            data: web3.eth.abi.encodeFunctionCall(_abi, params)
+        })
+
+        document.getElementById(`result_${funcName}`).value =
+            web3.utils.hexToNumber(res);
     }
 
     async function getContract() {
@@ -203,11 +224,13 @@ contract Hello{
 
 
         console.log("#", contracts)
+
         for (var _contract of contracts) {
             var Contract = await new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
-            document.getElementById("contractAddr").value = _contract._address
-            console.log(Contract._address)
+            document.getElementById("contractAddr").value = _contract._address;
+            console.log(_contract._address)
         }
+        document.getElementById("contractAddr").value = '0x9759df733e1b503368abcaae437e1280f10f16f7';
 
         // listen event
         // Contract.events.SetName({}, function (error, event) {
