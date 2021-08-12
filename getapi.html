@@ -1,0 +1,20 @@
+<html>
+
+<head>
+    1232111131
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<script>
+    a();
+    async function a() {
+        axios.defaults.headers.get['Content-Type'] = 'application/json;charset=utf-8';
+        axios.defaults.headers.get['Access-Control-Allow-Origin'] = 'http://ecos.bok.or.kr/api/';
+
+        axios.get(
+            'http://ecos.bok.or.kr/api/StatisticSearch/772PYYYCT8B3HKTQLNV2/json/kr/1/10/028Y015/MM/202105/202106/1080000/?/?/'
+        ).then(console.log("ho"));
+    }
+</script>
+
+</html>
