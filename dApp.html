@@ -26,51 +26,52 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bignumber.js@9.0.1/bignumber.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@1.4.0/dist/web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/csv@5.5.0/lib"></script>
+    <style>
+        input, textarea{
+            font-size: 13px;"
+        }
+        h1{
+            color:rgb(155,77,202);
+        }
+    </style>
 
+</head>
+"
+<body style="background-color: rgb(225,201,239);">
+    <div class="container">
+        <div class="row justify-content-start">
+            <div id="result" class="col-2 px-5 py-5 bg-light border rounded-start" style="display:none"></div>
+            <div id="editor" class="col px-5 py-5 bg-light border rounded-3">
+                 <div class="row mt-3">
+                    <h5>Linked Account Address</h5>
+                    <input type="text" placeholder="Ethereum Acccount Address" id="account" class="col" readonly/></input>
+                    <button onClick="sample()" class="col-md-2 offset-md-2 ms-3" style="background-color: rgb(240,100,100); border:0px">Sample Code</button>
+                </div>
 
+                <div class="row mt-3">
+                    <input type="text" id="contractName" class="col me-3" placeholder="Contract Name" spellcheck = "false"></input>
+                    <input type="text" id="contractAddr" class="col ms-3" placeholder="Contract Address" spellcheck = "false"></input>
+                </div>
 
-<body>
-    <div>
-        <h3>MightyOtter's Contract Maker</h3>
-        <input type="text" id="contractName" placeholder="Contract Name"></input>
-        <input type="text" id="contractAddr" placeholder="Contract Address"></input>
-        <textarea id="code" placeholder="Contract Code Here..." class="overflow-auto"
-            style="min-height: 400px;"></textarea>
-        <br>
-        <h5>My Account Address</h5>
-        <input type="text" placeholder="Ethereum Acccount Address" id="account"></input>
-        <button onClick="compile()">Compile</button>
-        <button onClick="deploy()">deploy</button>
-        <button onClick="getContract()">Get Contract</button>
+                <div class="row mt-3">
+                    <textarea id="code" placeholder="Contract Code Here..." class="overflow-auto" spellcheck = "false"
+                        style="min-height: 400px;"></textarea>
+                    <br>
+                </div>
+               
+                <div class="row mt-3">
+                    <button onClick="compile()" class="col me-3">Compile</button>
+                    <button onClick="deploy()" class="col ms-3">Deploy</button>
+                </div>
+            </div>
+            <div width="300px" height="500px" class="py-5 px-5" style="background-color: rgb(255,255,255);">
+                <h2> Console </h2>
+
+                <div id="logger" style="font-size:15px"></div>
+            </div>
+        </div>
     </div>
-    <div id="result" style="margin-top:2rem;"></div>
-
 </body>
-
-<script>
-    document.getElementById("contractAddr").value = '0x9759df733e1b503368abcaae437e1280f10f16f7';
-    document.getElementById("contractName").value = 'test.sol'
-    document.getElementById("code").value =
-        `pragma solidity ^0.8.4;
-
-contract Hello{
-    uint asd;
-    function setNumber(uint a, uint b) public returns(uint){
-        asd = a + b;
-        return asd;
-    }
-    function getBlockNumber() public view returns(uint){
-        return block.number;
-    }
-    function getBlockNumber2(uint a, uint b) public pure returns(uint){
-        return a + b;
-    }
-    function getHash() public view returns(bytes32){
-        return keccak256(abi.encodePacked(block.timestamp));
-    }
-}`
-</script>
 
 <script type="text/javascript">
     let web3;
@@ -126,14 +127,21 @@ contract Hello{
                 }
             }
         }
-        axios.post('http://localhost:3000/compile', article).then((res) => {
+        axios.post('http://123.108.168.214:3000/compile', article).then((res) => {
             var contractItem = {
                 abi: res.data.abi,
                 bytecode: res.data.bytecode
             }
             contracts.push(contractItem);
             console.log("res : ", res)
-        });
+
+            getContract();
+
+            document.getElementById("logger").innerHTML = `Compile Success!`;
+        }).catch((err) => {
+            console.log(err);
+            document.getElementById("logger").innerHTML = `\n${err}`;
+        })
     }
 
 
@@ -150,58 +158,81 @@ contract Hello{
         console.log("##", blocks);
         document.getElementById("contractAddr").value = block.contractAddress
         alert("!!! Contract Deployed !!!")
-        //getContract();
     }
 
     async function sendContractFunction(funcName) {
-        console.log("send")
-        document.getElementById("contractAddr").value
-        var params =
-            document.getElementById(`input_${funcName}`).value.split(",");
 
-        var temp = new web3.eth.Contract(contracts[0].abi[0], document.getElementById("contractAddr").value);
-
-        // temp.methods[funcName].send({
-        //     from: accounts[0],
-        // });
-    }
-    async function callContractFunction(funcName) {
-        console.log("call", funcName, web3.eth.Contract.defaultAccount)
-
-        let params;
-
-        try {
-            params = document.getElementById(`input_${funcName}`).value.split(",");
-        } catch (err) {
-            params = 0x00;
-        }
-
+        var _contractAddr = document.getElementById("contractAddr").value;
         var _abi = (() => {
             for (var item of contracts[0].abi[0]) {
                 if (item.name == funcName) {
                     return item;
                 }
             }
-        })()
+        })();
+
+        try{
+            params = document.getElementById(`input_${funcName}`).value.split(",");
+            _data = web3.eth.abi.encodeFunctionCall(_abi, params);
+        } catch (err) {
+            console.log(err);
+            _data = web3.eth.abi.encodeFunctionSignature(_abi)
+        }
+        console.log(_data);
+
+        _res = await web3.eth.sendTransaction({
+                from: web3.eth.Contract.defaultAccount,
+                to: _contractAddr,
+                data: _data,
+            })
+
+        console.log(_res);
+    }
+
+    async function callContractFunction(funcName) {
+
+        let params;
+        let data; 
+
+        var _contractAddr = document.getElementById("contractAddr").value;
+        
+        var _abi = (() => {
+            for (var item of contracts[0].abi[0]) {
+                if (item.name == funcName) {
+                    return item;
+                }
+            }
+        })();
+        
+        var _res;
+
+        try{
+            params = document.getElementById(`input_${funcName}`).value.split(",");
+            _data = web3.eth.abi.encodeFunctionCall(_abi, params);
+            
+        } catch (err) {
+            _data = web3.eth.abi.encodeFunctionSignature(_abi)
+        }
+        
+        _res = await web3.eth.call({
+                to: _contractAddr,
+                data: _data,
+            })
+        
+        //document.getElementById(`result_${funcName}`).value = web3.utils.hexToNumberString(_res);
+        document.getElementById('logger').innerHTML = web3.utils.hexToNumberString(_res);
 
         console.log("params:", params)
         console.log("abi:", _abi);
-
-        web3.eth.abi.encodeFunctionCall(_abi, params);
-
-        var res = await web3.eth.call({
-            to: document.getElementById("contractAddr").value,
-            data: web3.eth.abi.encodeFunctionCall(_abi, params)
-        })
-
-        document.getElementById(`result_${funcName}`).value =
-            web3.utils.hexToNumber(res);
     }
 
-    async function getContract() {
+    function getContract() {
         var ele = document.getElementById('result');
         var scripts = '';
         var funcSwitch = '';
+
+        ele.style.display = 'block';
+        // document.getElementById('editor').className = "col py-5 bg-light border border-dark rounded-end";
 
         for (var contract of contracts) {
             for (var abis of contract.abi) {
@@ -213,24 +244,22 @@ contract Hello{
                         '<div style="float:left">' +
                         `<button onclick='${funcSelector}("${abi.name}")'} style="margin-top:1rem; width:150px">${abi.name}</button>` +
                         (abi.inputs.length != 0 ?
-                            `<br><input type="text" id="input_${abi.name}" style="width:150px"/>` :
-                            "") +
-                        `<br><input type="text" id="result_${abi.name}" style="width:150px" readonly/></div>`
+                            `<br><input type="text" id="input_${abi.name}" style="width:150px" placeholder="inputs"/>` :
+                            "") 
+                            //+ `<br><input type="text" id="result_${abi.name}" style="width:150px" placeholder="result" readonly/>`
+                            + '</div>'
                 }
             }
         }
         ele.innerHTML = "";
         ele.insertAdjacentHTML('beforeend', scripts);
 
-
         console.log("#", contracts)
 
-        for (var _contract of contracts) {
-            var Contract = await new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
-            document.getElementById("contractAddr").value = _contract._address;
-            console.log(_contract._address)
-        }
-        document.getElementById("contractAddr").value = '0x9759df733e1b503368abcaae437e1280f10f16f7';
+        // for (var _contract of contracts) {
+        //     var Contract = new web3.eth.Contract(_contract.abi) //, _contract.bytecode)
+        //     console.log(_contract._address)
+        // }
 
         // listen event
         // Contract.events.SetName({}, function (error, event) {
@@ -239,6 +268,33 @@ contract Hello{
         //         .returnValues.sender
         // })
         // document.getElementById("eventResult").innerText = "Listening..."
+    }
+
+    function sample(){
+        document.getElementById("contractAddr").value = '0x90fDbd5c4ad05bbC62A45f198A7C1274072947bb';
+        document.getElementById("contractName").value = 'test.sol'
+        document.getElementById("code").value =
+        `pragma solidity ^0.8.4;
+
+contract Hello{
+    uint bNumber;
+    function setNumber(uint num) public returns(uint){
+        bNumber = num;
+        return bNumber;
+    }
+    function getNumber() public view returns(uint){
+        return bNumber;
+    }
+    function getBlockNumber() public view returns(uint){
+        return block.number;
+    }
+    function add(uint a, uint b) public pure returns(uint){
+        return a + b;
+    }
+    function getHash() public view returns(bytes32){
+        return keccak256(abi.encodePacked(block.timestamp));
+    }
+}`
     }
 </script>
 

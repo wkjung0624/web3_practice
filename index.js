@@ -44,7 +44,7 @@ app.post('/compile', function (req, res) {
     // res.send(output);
     try {
         var output = JSON.parse(solc.compile(JSON.stringify(req.body)));
-        console.log(output);
+        console.log("output here:",output);
 
         var bytecodes = [];
         var abis = []
@@ -64,10 +64,13 @@ app.post('/compile', function (req, res) {
         });
 
     } catch (err) {
-        console.log(err);
+        for(var ai of err.errors){
+            console.log(ai);
+            console.log("####")
+        }
+
+        res.send(err.errors);
     }
-
-
 });
 
 server.listen(3000, function () {
